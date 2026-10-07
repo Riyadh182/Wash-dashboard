@@ -60,7 +60,7 @@ def clean(df, tab):
         if k == "Date": df[k] = pd.to_datetime(df[k], errors="coerce", format="mixed").dt.date
         elif k in HM: df[k] = df[k].map(hm)
         elif k in NUM: df[k] = pd.to_numeric(df[k].astype(str).str.replace(",", ""), errors="coerce").fillna(0)
-        else: df[k] = df[k].map(_s)
+        else: df[k] = df[k].map(_s).astype(str)
     if "Date" in cols: df = df[df["Date"].notna()]
     return df.reset_index(drop=True)
 
@@ -153,7 +153,7 @@ def wash_summary(d, date, unit, now_h):
                       O.groupby(["Machine", "Lot No"])["Output Pcs"].sum().rename("o")], axis=1).fillna(0).astype(float)
     done = lots[(lots.p > 0) & (lots.o >= lots.p)]
     D = D.assign(dur=(D["To"] - D["From"]).clip(lower=0))
-    Qr = Q[Q["Rewash"].str.lower().isin(["yes", "y", "true", "1"])]
+    Qr = Q[Q["Rewash"].astype(str).str.lower().isin(["yes", "y", "true", "1"])]
     sched = {mc: "; ".join(f"{fh(r['Sched From'])}-{fh(r['Sched To'])} {r['Lot No']}:{r['Plan Pcs']:,.0f}" for r in g.to_dict("records"))
              for mc, g in P.groupby("Machine")}
     dtxt = {mc: ", ".join(f"{fh(a)}-{fh(b)}" for a, b in zip(g["From"], g["To"])) for mc, g in D.groupby("Machine")}
